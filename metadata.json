@@ -1,0 +1,8 @@
+{
+  "name": "Chore Tracker",
+  "description": "A daily chore activities tracker with offline-first capabilities, progress charts, weekly trend reviews, and custom reminders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

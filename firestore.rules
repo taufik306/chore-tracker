@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global safety net: default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Validation helper for Document IDs
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper to check if a user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper to retrieve incoming resource data
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Helper to retrieve existing resource data
+    function existing() {
+      return resource.data;
+    }
+
+    // Helper to validate the Chore model
+    function isValidChore(data) {
+      return data.id is string
+        && data.id.size() <= 128
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.priority is string
+        && (data.priority == 'low' || data.priority == 'medium' || data.priority == 'high')
+        && data.status is string
+        && (data.status == 'active' || data.status == 'completed' || data.status == 'cancelled')
+        && data.startTime is int
+        && data.createdAt is int
+        && data.updatedAt is int
+        && (!('limitMinutes' in data) || data.limitMinutes == null || data.limitMinutes is int)
+        && (!('completedAt' in data) || data.completedAt == null || data.completedAt is int);
+    }
+
+    match /chores/{choreId} {
+      // Get: must be signed in and own the chore
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      
+      // List: forced query security check on resource owner
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // Create: must be signed in, valid ID, and conform to schema
+      allow create: if isSignedIn() 
+        && isValidId(choreId) 
+        && incoming().id == choreId
+        && isValidChore(incoming());
+
+      // Update: must be signed in, own the existing document, and cannot change crucial fields like id, userId, or createdAt
+      allow update: if isSignedIn()
+        && existing().userId == request.auth.uid
+        && incoming().userId == request.auth.uid
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && isValidChore(incoming())
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'priority', 'status', 'limitMinutes', 'completedAt', 'updatedAt'])
+        );
+
+      // Delete: must be signed in and own the chore
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}

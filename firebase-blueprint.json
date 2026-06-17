@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "Chore": {
+      "title": "Chore",
+      "description": "Represents a user's chore or activity with starting details, time limits, and completion states.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the chore document."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns the chore."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or action statement of the chore."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "The priority order of the activity task."
+        },
+        "limitMinutes": {
+          "type": "integer",
+          "description": "Optional time limit for the activity in minutes. Can be null or not set if unlimited."
+        },
+        "startTime": {
+          "type": "integer",
+          "description": "The timestamp in milliseconds when the chore/activity was added and started."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "completed", "cancelled"],
+          "description": "The current state of the activity."
+        },
+        "completedAt": {
+          "type": "integer",
+          "description": "Optional completion timestamp in milliseconds."
+        },
+        "createdAt": {
+          "type": "integer",
+          "description": "The timestamp in milliseconds indicating when the doc was created."
+        },
+        "updatedAt": {
+          "type": "integer",
+          "description": "The timestamp in milliseconds indicating when the doc was last updated."
+        }
+      },
+      "required": ["id", "userId", "title", "priority", "status", "startTime", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/chores/{choreId}": {
+      "schema": "Chore",
+      "description": "Collections of chores owned by individual authenticated users."
+    }
+  }
+}
