@@ -168,7 +168,11 @@ export default function App() {
   // Save guest status locally upon change
   useEffect(() => {
     if (isGuestMode || !user) {
-      localStorage.setItem('local_guest_chores', JSON.stringify(chores));
+      if (chores.length === 0) {
+        localStorage.removeItem('local_guest_chores');
+      } else {
+        localStorage.setItem('local_guest_chores', JSON.stringify(chores));
+      }
     }
   }, [chores, isGuestMode, user]);
 
@@ -349,6 +353,16 @@ export default function App() {
     }
   };
 
+  const handleClearLocalData = () => {
+    const confirmClear = window.confirm(
+      "Are you sure you want to permanently delete all guest chores stored on this device? This action cannot be undone."
+    );
+    if (confirmClear) {
+      localStorage.removeItem('local_guest_chores');
+      setChores([]);
+    }
+  };
+
   const handleMarkNotificationRead = (notifId: string) => {
     setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
   };
@@ -457,9 +471,14 @@ export default function App() {
               </button>
             </div>
 
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center">
-              * By launching offline mode, your chore records will reside primarily inside your local browser cache until your session is connected.
-            </p>
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-3 text-left">
+              <p className="text-xs font-semibold text-amber-800 dark:text-amber-400 flex items-center gap-1.5 mb-1">
+                ⚠️ Guest Data Notice
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-500 leading-normal">
+                Guest data is stored in your browser's local storage and is not encrypted. Sign in for secure cloud-backed storage.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -558,14 +577,27 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <button
-                id="link-google-btn"
-                onClick={handleGoogleLogin}
-                className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>🔑</span>
-                Sync Account
-              </button>
+              <div className="flex items-center gap-2">
+                {isGuestMode && (
+                  <button
+                    id="clear-guest-data-btn"
+                    onClick={handleClearLocalData}
+                    title="Clear Local Guest Data"
+                    className="p-2 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-900 dark:hover:bg-rose-950/20 dark:hover:text-rose-450 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline text-xs font-semibold">Clear Local Data</span>
+                  </button>
+                )}
+                <button
+                  id="link-google-btn"
+                  onClick={handleGoogleLogin}
+                  className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>🔑</span>
+                  Sync Account
+                </button>
+              </div>
             )}
 
           </div>
