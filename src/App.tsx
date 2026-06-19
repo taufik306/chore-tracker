@@ -14,7 +14,8 @@ import {
   setDoc, 
   writeBatch,
   deleteDoc,
-  updateDoc 
+  updateDoc,
+  limit 
 } from 'firebase/firestore';
 
 import { 
@@ -143,7 +144,11 @@ export default function App() {
     // Cloud Mode: Subscribe to Firestore onSnapshot
     if (user) {
       const pathStr = 'chores';
-      const q = query(collection(db, pathStr), where('userId', '==', user.uid));
+      const q = query(
+        collection(db, pathStr),
+        where('userId', '==', user.uid),
+        limit(500)
+      );
       
       const unsubscribeSnap = onSnapshot(q, (snapshot) => {
         const loaded: Chore[] = [];
