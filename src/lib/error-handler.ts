@@ -9,41 +9,26 @@ export enum OperationType {
   WRITE = 'write',
 }
 
-export interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-    providerInfo?: {
-      providerId?: string | null;
-      email?: string | null;
-    }[];
-  };
-}
+export function handleFirestoreError(
+  error: unknown,
+  operationType: OperationType,
+  path: string | null
+): never {
+  const errorMessage = error instanceof Error ? error.message : String(error);
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || []
-    },
-    operationType,
-    path
-  };
-  
-  console.error('Firestore Hardened Error Encoded: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Log structured error for debugging (no PII)
+  console.error('[Firestore Error]', {
+    operation: operationType,
+    path,
+    message: errorMessage,
+  });
+
+  if (import.meta.env.DEV) {
+    console.debug('[Debug Auth Context]', auth.currentUser?.uid);
+  }
+
+  // Throw a user-safe error message
+  throw new Error(
+    `Firestore ${operationType} operation failed. Please try again or check your connection.`
+  );
 }
