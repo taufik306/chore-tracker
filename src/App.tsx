@@ -63,6 +63,7 @@ export default function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastCreatedAt, setLastCreatedAt] = useState(0);
 
   // Active view tab state: 'active-chores' | 'history' | 'dashboard'
   const [activeTab, setActiveTab] = useState<'active-chores' | 'history' | 'dashboard'>('active-chores');
@@ -244,8 +245,13 @@ export default function App() {
 
   // 6. Action: Add Chore Commencing
   const handleAddChore = async (title: string, priority: PriorityLevel, limitMinutes: number | null) => {
-    setIsSubmitting(true);
     const now = Date.now();
+    if (now - lastCreatedAt < 2000) {
+      throw new Error('Please wait a moment before adding another chore.');
+    }
+    setLastCreatedAt(now);
+
+    setIsSubmitting(true);
     
     const newChoreId = user ? doc(collection(db, 'chores')).id : `local-${now}-${Math.random().toString(36).substr(2, 4)}`;
     const newChore: Chore = {
