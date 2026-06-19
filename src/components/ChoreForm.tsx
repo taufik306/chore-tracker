@@ -24,6 +24,11 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
       return;
     }
 
+    if (trimmedTitle.length > 200) {
+      setErrorMsg('Chore title must be 200 characters or fewer.');
+      return;
+    }
+
     if (hasTimeLimit && (limitMinutes === null || limitMinutes <= 0)) {
       setErrorMsg('Please specify a valid time limit in minutes.');
       return;
@@ -75,14 +80,20 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
 
       {/* Title Field */}
       <div className="space-y-1.5 mb-4">
-        <label htmlFor="chore-title" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
-          Activity / Chore Name
-        </label>
+        <div className="flex justify-between items-center">
+          <label htmlFor="chore-title" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+            Activity / Chore Name
+          </label>
+          <span className={`text-[10px] font-medium transition-colors ${title.length > 180 ? 'text-amber-500 font-bold' : 'text-slate-450 dark:text-slate-500'}`}>
+            {title.length}/200
+          </span>
+        </div>
         <input
           id="chore-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          maxLength={200}
           placeholder="e.g. Unpacking groceries, vacuuming bedroom, organizing drawers"
           disabled={isSubmitting}
           className="w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
