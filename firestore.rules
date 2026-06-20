@@ -43,7 +43,7 @@ service cloud.firestore {
         && data.startTime is int
         && data.createdAt is int
         && data.updatedAt is int
-        && (!('limitMinutes' in data) || data.limitMinutes == null || data.limitMinutes is int)
+        && (!('limitMinutes' in data) || data.limitMinutes == null || (data.limitMinutes is int && data.limitMinutes > 0 && data.limitMinutes <= 1440))
         && (!('completedAt' in data) || data.completedAt == null || data.completedAt is int);
     }
 
