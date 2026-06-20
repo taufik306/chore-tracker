@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  signInWithPopup, 
-  signOut, 
-  onAuthStateChanged, 
-  User 
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  User
 } from 'firebase/auth';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  setDoc,
   writeBatch,
   deleteDoc,
   updateDoc,
-  limit 
+  limit
 } from 'firebase/firestore';
 
-import { 
-  auth, 
-  db, 
+import {
+  auth,
+  db,
   googleProvider,
-  testFirebaseConnection 
+  testFirebaseConnection
 } from './lib/firebase';
 import { handleFirestoreError, OperationType } from './lib/error-handler';
 import { Chore, AppNotification, PriorityLevel } from './types';
@@ -35,15 +35,15 @@ import Dashboard from './components/Dashboard';
 import NotificationCenter from './components/NotificationCenter';
 
 // Icons
-import { 
-  TrendingUp, 
-  Activity, 
-  LogOut, 
-  Moon, 
-  Sun, 
-  Wifi, 
-  WifiOff, 
-  User as UserIcon, 
+import {
+  TrendingUp,
+  Activity,
+  LogOut,
+  Moon,
+  Sun,
+  Wifi,
+  WifiOff,
+  User as UserIcon,
   Sparkles,
   ClipboardList,
   History,
@@ -57,7 +57,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
+
   // App states
   const [chores, setChores] = useState<Chore[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -150,7 +150,7 @@ export default function App() {
         where('userId', '==', user.uid),
         limit(500)
       );
-      
+
       const unsubscribeSnap = onSnapshot(q, (snapshot) => {
         const loaded: Chore[] = [];
         snapshot.forEach((docSnap) => {
@@ -210,7 +210,7 @@ export default function App() {
               return next;
             });
           }
-        } 
+        }
         // Condition B: Unlimited chore run over 24 hours
         else {
           const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -252,7 +252,7 @@ export default function App() {
     setLastCreatedAt(now);
 
     setIsSubmitting(true);
-    
+
     const newChoreId = user ? doc(collection(db, 'chores')).id : `local-${now}-${Math.random().toString(36).substr(2, 4)}`;
     const newChore: Chore = {
       id: newChoreId,
@@ -341,7 +341,7 @@ export default function App() {
       setAuthLoading(true);
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      console.error("Popup authenticated error:", error);
+      console.error("Sign-in failed:", error instanceof Error ? error.message : 'Unknown error');
       alert("Sign in sequence failed. You can launch using Local Guest Mode instead!");
     } finally {
       setAuthLoading(false);
@@ -397,12 +397,12 @@ export default function App() {
   if (!user && !isGuestMode) {
     return (
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-        
+
         {/* Pitch Hero Panel */}
         <div className="lg:col-span-7 flex flex-col justify-between p-8 lg:p-12 bg-slate-900 text-white relative overflow-hidden">
           {/* Ambient gradient */}
           <div className="absolute inset-x-0 bottom-0 top-0 bg-gradient-to-tr from-indigo-950/40 via-transparent to-transparent pointer-events-none" />
-          
+
           <div className="flex items-center gap-2 relative z-10">
             <ClipboardList className="w-6 h-6 text-indigo-405" />
             <span className="font-header tracking-wider text-sm font-bold uppercase text-slate-300">Chore Tracker Platform</span>
@@ -494,11 +494,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      
+
       {/* Top Banner Toolbar Header */}
       <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-150 dark:border-slate-850 px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          
+
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-indigo-600 text-white rounded-lg">
               <ClipboardList className="w-5 h-5" />
@@ -510,13 +510,12 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            
+
             {/* Online Status Dot Badge */}
-            <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide border ${
-              isOnline
+            <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide border ${isOnline
                 ? 'bg-emerald-50 dark:bg-emerald-950/25 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400'
                 : 'bg-amber-50 dark:bg-amber-950/25 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400'
-            }`}>
+              }`}>
               {isOnline ? (
                 <>
                   <Wifi className="w-3.5 h-3.5" />
@@ -561,18 +560,18 @@ export default function App() {
                   </p>
                 </div>
                 {user.photoURL ? (
-                  <img 
-                    src={user.photoURL} 
+                  <img
+                    src={user.photoURL}
                     alt="user icon"
                     referrerPolicy="no-referrer"
-                    className="w-8 h-8 rounded-full border border-indigo-100" 
+                    className="w-8 h-8 rounded-full border border-indigo-100"
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-xs font-bold text-indigo-700">
                     <UserIcon className="w-4 h-4" />
                   </div>
                 )}
-                
+
                 <button
                   id="auth-logout-btn"
                   onClick={handleLogout}
@@ -613,30 +612,28 @@ export default function App() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6">
-        
+
         {/* Tab Selection */}
         <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-850 mb-6">
           <button
             id="tab-active-btn"
             onClick={() => setActiveTab('active-chores')}
-            className={`py-2 px-4 text-xs font-bold tracking-wide uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-              activeTab === 'active-chores'
+            className={`py-2 px-4 text-xs font-bold tracking-wide uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'active-chores'
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-slate-550 dark:text-slate-450 hover:text-slate-700'
-            }`}
+              }`}
           >
             <Activity className="w-4 h-4" />
             Active Tracker ({chores.filter(c => c.status === 'active').length})
           </button>
-          
+
           <button
             id="tab-dashboard-btn"
             onClick={() => setActiveTab('dashboard')}
-            className={`py-2 px-4 text-xs font-bold tracking-wide uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-              activeTab === 'dashboard'
+            className={`py-2 px-4 text-xs font-bold tracking-wide uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'dashboard'
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-slate-550 dark:text-slate-450 hover:text-slate-700'
-            }`}
+              }`}
           >
             <TrendingUp className="w-4 h-4" />
             Dashboard trends
@@ -645,11 +642,10 @@ export default function App() {
           <button
             id="tab-history-btn"
             onClick={() => setActiveTab('history')}
-            className={`py-2 px-4 text-xs font-bold tracking-wide uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-              activeTab === 'history'
+            className={`py-2 px-4 text-xs font-bold tracking-wide uppercase border-b-2 transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'history'
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-slate-550 dark:text-slate-450 hover:text-slate-700'
-            }`}
+              }`}
           >
             <History className="w-4 h-4" />
             Chore History ({resolvedChores.length})
@@ -658,11 +654,11 @@ export default function App() {
 
         {/* Content Bento Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+
           {/* Left panel sidebar: creation of chore (is sticky only on high screens) */}
           <div className="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
             <ChoreForm onAddChore={handleAddChore} isSubmitting={isSubmitting} />
-            
+
             {/* Help guidelines banner card */}
             <div className="bg-gradient-to-tr from-indigo-900 to-slate-900 text-white rounded-2xl p-5 border border-indigo-950 shadow-sm space-y-3 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-3 text-indigo-400 opacity-20">
@@ -688,24 +684,24 @@ export default function App() {
 
           {/* Right dynamic panel viewport */}
           <div className="lg:col-span-8">
-            
+
             {/* View: Active Chore list */}
             {activeTab === 'active-chores' && (
               <div className="space-y-4 animate-fade-in">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-850">
                   <div>
                     <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                       Active Activity Logs
+                      Active Activity Logs
                     </h2>
                     <p className="text-xs text-slate-500">Currently commencing activities and real-time ticking deadline progress</p>
                   </div>
                 </div>
-                
-                <ActiveList 
-                  chores={chores} 
-                  onCompleteChore={handleCompleteChore} 
+
+                <ActiveList
+                  chores={chores}
+                  onCompleteChore={handleCompleteChore}
                   onCancelChore={handleCancelChore}
-                  onClearCompleted={() => {}}
+                  onClearCompleted={() => { }}
                 />
               </div>
             )}
@@ -763,7 +759,7 @@ export default function App() {
                               hour: '2-digit',
                               minute: '2-digit'
                             });
-                            
+
                             return (
                               <tr key={chore.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                                 <td className="py-3.5 px-4">
@@ -779,11 +775,10 @@ export default function App() {
                                   <p className="text-[10px]">{timeStr}</p>
                                 </td>
                                 <td className="py-3.5 px-4 text-center">
-                                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
-                                    isCompleted 
-                                      ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400' 
+                                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${isCompleted
+                                      ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400'
                                       : 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400'
-                                  }`}>
+                                    }`}>
                                     {isCompleted ? 'Completed' : 'Cancelled'}
                                   </span>
                                 </td>
