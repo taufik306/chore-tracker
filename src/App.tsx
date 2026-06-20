@@ -338,13 +338,19 @@ export default function App() {
   // 9. Auth Actions
   const handleGoogleLogin = async () => {
     try {
-      setAuthLoading(true);
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle user-initiated cancellations (e.g., closing the popup)
+      const code = error?.code;
+      if (
+        code === 'auth/popup-closed-by-user' ||
+        code === 'auth/cancelled-popup-request' ||
+        code === 'auth/user-cancelled'
+      ) {
+        return;
+      }
       console.error("Sign-in failed:", error instanceof Error ? error.message : 'Unknown error');
       alert("Sign in sequence failed. You can launch using Local Guest Mode instead!");
-    } finally {
-      setAuthLoading(false);
     }
   };
 
