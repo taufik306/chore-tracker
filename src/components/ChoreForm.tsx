@@ -36,15 +36,16 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
 
     try {
       await onAddChore(
-        trimmedTitle, 
-        priority, 
+        trimmedTitle,
+        priority,
         hasTimeLimit ? Number(limitMinutes) : null
       );
       // Reset form save for priority presets
       setTitle('');
       setHasTimeLimit(false);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error creating activity task.');
+      // Never render raw error messages in the UI
+      setErrorMsg('Something went wrong. Please try again.');
     }
   };
 
@@ -54,9 +55,9 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
   };
 
   return (
-    <form 
+    <form
       id="chore-creation-form"
-      onSubmit={handleSubmit} 
+      onSubmit={handleSubmit}
       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -115,15 +116,14 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
                 id={`priority-btn-${level}`}
                 disabled={isSubmitting}
                 onClick={() => setPriority(level)}
-                className={`py-2 px-3 rounded-xl border text-xs font-medium capitalize text-center transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? level === 'high'
-                      ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-500 text-rose-600 dark:text-rose-400 ring-2 ring-rose-500/10'
-                      : level === 'medium'
+                className={`py-2 px-3 rounded-xl border text-xs font-medium capitalize text-center transition-all duration-200 cursor-pointer ${isSelected
+                  ? level === 'high'
+                    ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-500 text-rose-600 dark:text-rose-400 ring-2 ring-rose-500/10'
+                    : level === 'medium'
                       ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-500 text-amber-600 dark:text-amber-400 ring-2 ring-amber-500/10'
                       : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 ring-2 ring-emerald-500/10'
-                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400'
-                }`}
+                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400'
+                  }`}
               >
                 {level}
               </button>
@@ -179,11 +179,10 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
                   id={`preset-${mins}-mins`}
                   disabled={isSubmitting}
                   onClick={() => setPresetMinutes(mins)}
-                  className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
-                    limitMinutes === mins && hasTimeLimit
-                      ? 'bg-indigo-600 border-indigo-600 text-white'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                  }`}
+                  className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${limitMinutes === mins && hasTimeLimit
+                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
                 >
                   {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
                 </button>
