@@ -93,6 +93,147 @@ allow update: if isSignedIn()
   && incoming().createdAt == existing().createdAt;
 ```
 
+#### Data Validation (`isValidChore`)
+All create and update operations pass through a comprehensive `isValidChore(data)` validation function that enforces strict schema boundaries server-side:
+
+| Field | Type | Constraint |
+|---|---|---|
+| `id` | `string` | Max 128 characters |
+| `userId` | `string` | Must match `request.auth.uid` |
+| `title` | `string` | 1–200 characters |
+| `priority` | `string` | Enum: `low`, `medium`, `high` |
+| `status` | `string` | Enum: `active`, `completed`, `cancelled` |
+| `startTime` | `int` | Required |
+| `createdAt` | `int` | Required, immutable on updates |
+| `updatedAt` | `int` | Required |
+| `limitMinutes` | `int` or `null` | Optional; if present: `> 0` and `<= 1440` (24 hours) |
+| `completedAt` | `int` or `null` | Optional |
+
+#### Update Field Whitelist
+Updates are further restricted to only allow modification of specific fields via `affectedKeys().hasOnly()`:
+```javascript
+incoming().diff(existing()).affectedKeys().hasOnly(
+  ['title', 'priority', 'status', 'limitMinutes', 'completedAt', 'updatedAt']
+)
+```
+This prevents clients from tampering with `id`, `userId`, `createdAt`, or `startTime` after creation.
+
+---
+
+### 5. Error Handling (`src/lib/error-handler.ts`)
+All Firestore operation errors are routed through a centralized `handleFirestoreError()` function that enforces two critical security principles:
+
+1. **PII Stripping**: Error logs only include operational context (`operation`, `path`, `message`) — never user emails, UIDs, or provider data.
+2. **User-Safe Messaging**: The function always re-throws a generic error message that is safe to render in the UI:
+   ```typescript
+   throw new Error(
+     `Firestore ${operationType} operation failed. Please try again or check your connection.`
+   );
+   ```
+
+Developer-only debugging (e.g., `auth.currentUser?.uid`) is gated behind a Vite environment check:
+```typescript
+if (import.meta.env.DEV) {
+  console.debug('[Debug Auth Context]', auth.currentUser?.uid);
+}
+```
+This ensures sensitive identifiers are never logged in production builds.
+
+---
+
+### 6. Content Security Policy (`index.html`)
+A strict Content Security Policy (CSP) is enforced via a `<meta>` tag in `index.html` to mitigate Cross-Site Scripting (XSS) and data injection attacks:
+
+| Directive | Value | Purpose |
+|---|---|---|
+| `default-src` | `'self'` | Fallback: only allow resources from the same origin |
+| `script-src` | `'self' https://apis.google.com` | App scripts + Google API scripts (required for Firebase Auth popup) |
+| `style-src` | `'self' 'unsafe-inline'` | Same-origin styles + inline styles (required for Tailwind CSS runtime injection) |
+| `connect-src` | `'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com` | Firebase API endpoints for Auth, Firestore, and other services |
+| `img-src` | `'self' https://*.googleusercontent.com data:` | Same-origin images + Google profile avatars + base64 data URIs |
+| `font-src` | `'self'` | Fonts only from same origin |
+| `frame-src` | `'self' https://*.firebaseapp.com` | Firebase Auth iframe for `signInWithPopup` OAuth flow |
+
+> **Note**: `'unsafe-inline'` in `style-src` is required for Tailwind CSS. The `https://apis.google.com` in `script-src` is required for Firebase Auth's Google Sign-In popup flow, which dynamically loads `api.js`.
+
+---
+
+### 7. Client-Side Input Validation (`src/components/ChoreForm.tsx`)
+Chore title input is validated both at the HTML and application logic level:
+
+- **HTML constraint**: `maxLength={200}` on the `<input>` element prevents typing beyond 200 characters.
+- **Submit handler validation**: Explicit check rejects titles exceeding 200 characters with a user-friendly error message.
+- **Character counter**: A live `{length}/200` counter is displayed below the input, with amber warning styling when the length exceeds 180 characters.
+- **User-safe error display**: All `catch` blocks in form submission render a generic `"Something went wrong. Please try again."` message — raw error details are never shown in the UI.
+
+These client-side constraints mirror the server-side `title.size() <= 200` rule enforced in `firestore.rules`.
+
+---
+
+### 8. Client-Side Rate Limiting (`src/App.tsx`)
+To prevent abuse from rapid chore creation (both accidental and intentional), a 2-second throttle is enforced:
+
+```typescript
+const [lastCreatedAt, setLastCreatedAt] = useState(0);
+
+const handleAddChore = async (...) => {
+  const now = Date.now();
+  if (now - lastCreatedAt < 2000) {
+    throw new Error('Please wait a moment before adding another chore.');
+  }
+  setLastCreatedAt(now);
+  // ... proceed with creation
+};
+```
+
+The error is caught by the `ChoreForm` component and displayed as a user-friendly message.
+
+---
+
+### 9. Query Limits (`src/App.tsx`)
+All Firestore `onSnapshot` list queries enforce a `limit(500)` cap to prevent excessive document reads:
+
+```typescript
+const q = query(
+  collection(db, 'chores'),
+  where('userId', '==', user.uid),
+  limit(500)
+);
+```
+
+This serves as a client-side safeguard against runaway read costs or denial-of-service scenarios. For applications that grow beyond this limit, cursor-based pagination with `startAfter()` should be implemented.
+
+---
+
+### 10. Guest Data Security (`src/App.tsx`)
+Guest mode stores chore data as plain text in `localStorage`, which cannot be encrypted securely in the browser. The following mitigations are in place:
+
+- **Prominent Disclaimer**: A highly visible amber warning block is displayed on the login page and informs the guest that their data is stored unencrypted in browser local storage.
+- **Clear Local Data Button**: When in guest mode, a "Clear Local Data" button (with a trash icon) is displayed in the navigation bar. Clicking it triggers a `window.confirm()` prompt before purging `local_guest_chores` from `localStorage` and resetting the chores state.
+- **No Sensitive Data**: The current guest schema only stores low-sensitivity chore data (titles, priorities, timestamps).
+
+---
+
+## 🔐 Environment Configuration
+
+### Firebase Credentials
+All Firebase configuration is loaded from environment variables (never hardcoded). The following variables must be set in a `.env` file at the project root:
+
+| Variable | Description |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | Firebase Web API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain (e.g., `your-project.firebaseapp.com`) |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Cloud Messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `VITE_FIREBASE_FIRESTORE_DATABASE_ID` | Firestore database ID (defaults to `(default)` if empty) |
+| `VITE_FIREBASE_MEASUREMENT_ID` | Firebase Analytics measurement ID (optional) |
+
+A template with placeholder values is available in `.env.example`. Copy it to `.env` and fill in the actual credentials.
+
+> **Important**: The file `firebase-applet-config.json` is listed in `.gitignore` and must never be committed to version control.
+
 ---
 
 ## 🚀 Developers Onboarding Checklist
@@ -109,6 +250,11 @@ When introducing new features or modifying the tracker, respect the following co
 ### Modifying Audio Signals:
 - Ensure oscillator node types remain `'sine'` or `'triangle'` to protect speakers and headphone users from high-frequency clicks.
 - Apply smooth release gain decays (`exponentialRampToValueAtTime`) to gracefully silence active voice nodes prior to the call of `.stop()`.
+
+### Modifying the Content Security Policy:
+- When adding new external dependencies (scripts, styles, fonts, iframes), update the corresponding CSP directive in the `<meta>` tag in `index.html`.
+- Always test Firebase Google Sign-In after modifying CSP, as the Auth popup flow depends on `script-src` (for `https://apis.google.com`) and `frame-src` (for `https://*.firebaseapp.com`).
+- Avoid adding `'unsafe-eval'` to `script-src` unless absolutely necessary.
 
 ### Rules of Engagement (Build Systems):
 - **Dependencies**: Never add client-side libraries manually with static script tags. Add them via `package.json` package installs.
