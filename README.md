@@ -39,6 +39,7 @@ Before running this project, ensure your environment meets the following minimum
 - **Browser**: A modern browser supporting Web Audio API, IndexedDB, and ES2022 features (Chrome 94+, Firefox 93+, Safari 15.4+, Edge 94+).
 - **Firebase Project**: Configured for Firestore Database and Authentication (Google OAuth).
 - **Environment Variables**: Create a `.env` file based on `.env.example` with your valid Firebase project credentials.
+- **Android Builds**: To run the native Android app, you must download `google-services.json` from your Firebase Console and place it exactly at `android/app/google-services.json`. Make sure your keystore's SHA-1 fingerprint is registered in Firebase.
 
 ---
 
