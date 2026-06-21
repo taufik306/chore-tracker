@@ -64,7 +64,7 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
         <div>
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Zap className="w-5 h-5 text-indigo-500 animate-pulse" />
-            Commence Chore
+            Add New Chore
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Record what you are doing at this moment.
@@ -199,7 +199,7 @@ export default function ChoreForm({ onAddChore, isSubmitting }: ChoreFormProps) 
         className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow active:scale-[0.98] disabled:opacity-50 cursor-pointer"
       >
         <Plus className="w-4 h-4" />
-        {isSubmitting ? 'Syncing Activity...' : 'Start Activity Code'}
+        {isSubmitting ? 'Syncing Activity...' : 'Start Activity'}
       </button>
     </form>
   );
