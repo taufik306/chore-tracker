@@ -23,6 +23,7 @@ A daily chore activities tracker application with offline-first capabilities, re
 - **Styling Architecture**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **Backend Services**: [Firebase Firestore](https://firebase.google.com/docs/firestore) (Persistent offline local caches)
 - **Authenticating Registry**: [Firebase Authentication](https://firebase.google.com/docs/auth) (Google OAuth Provider)
+- **Native Mobile Wrapper**: [Capacitor 6](https://capacitorjs.com/) (Android APK Deployment)
 - **Data Visualizer**: [Recharts](https://recharts.org/)
 - **Animation Motion**: [Motion (Framer Motion)](https://motion.dev/)
 - **Icons**: [Lucide React](https://lucide.dev/)
@@ -46,6 +47,7 @@ Before running this project, ensure your environment meets the following minimum
 ```text
 ├── docs/                        # Deep-dive system technical documentation
 │   └── technical-architecture.md
+├── android/                     # Capacitor Native Android Project (Built automatically via cap sync)
 ├── src/
 │   ├── components/              # Highly modular UI components
 │   │   ├── ActiveList.tsx       # Live ticking checklists, search, and sorting logic
@@ -58,9 +60,10 @@ Before running this project, ensure your environment meets the following minimum
 │   ├── utils/
 │   │   └── sound.ts             # Web Audio API Synthesizer with double and triple beeps
 │   ├── types.ts                 # Enums & schemas (Chore, Notification, Stats)
-│   ├── App.tsx                  # Core state orchestrator and entry hub
+│   ├── App.tsx                  # Core state orchestrator and entry hub (includes Native Auth flow)
 │   ├── index.css                # Global styles with Tailwind @import theme variables
 │   └── main.tsx                 # React DOM mount context
+├── capacitor.config.ts          # Capacitor configuration (Native bridging and plugin setup)
 ├── firebase-blueprint.json      # Structured Firestore schema metadata
 ├── firestore.rules              # Restrictive backend authorization rules
 ├── .env.example                 # Environment variables template for Firebase config
@@ -101,4 +104,16 @@ npm run build
 ### Linting Validation
 ```bash
 npm run lint
+```
+
+### Build & Sync Android APK source
+Compiles the web bundle and synchronizes it into the native Android Capacitor project.
+```bash
+npm run cap:build
+```
+
+### Open Android Studio
+Opens the bridged Capacitor project in Android Studio for native deployment and APK signing.
+```bash
+npm run cap:open
 ```

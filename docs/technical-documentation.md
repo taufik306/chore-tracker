@@ -203,9 +203,25 @@ const q = query(
 
 This serves as a client-side safeguard against runaway read costs or denial-of-service scenarios. For applications that grow beyond this limit, cursor-based pagination with `startAfter()` should be implemented.
 
+### 10. Android Native Deployment (Capacitor)
+The web application is packaged as a native Android APK using **Capacitor 6**. The web assets (`dist/`) are synchronized into a native Android WebView via `npx cap sync`. 
+
+#### Native Google Sign-In
+Standard Firebase web authentication (`signInWithPopup` or `signInWithRedirect`) is notoriously incompatible with mobile WebViews (due to restricted origins, popup blocking, and localhost redirect loops). To solve this, the application leverages the `@capacitor-firebase/authentication` plugin:
+
+1. **Native Account Picker**: When running on Android (`Capacitor.isNativePlatform()`), the app bypasses the web SDK and triggers the native Android Google Sign-In intent via Google Play Services.
+2. **Credential Manager Fallback**: The new Android 14 `CredentialManager` API frequently conflicts with 3rd-party password managers (like 1Password or Bitwarden), throwing `"No credentials available"` (`Error 10`). To ensure robust login success, the code explicitly disables this fallback:
+   ```typescript
+   const result = await FirebaseAuthentication.signInWithGoogle({
+     useCredentialManager: false // Forces the reliable legacy Google Account Picker
+   });
+   ```
+3. **Configuration**: The native Android project requires the `google-services.json` securely placed at `android/app/google-services.json`. The Firebase Console must also have the precise SHA-1 fingerprint of the signing Keystore (e.g., `debug.keystore` for local runs, or the Release Keystore for production APKs).
+4. **Capacitor Config**: `capacitor.config.ts` explicitly enables the `google.com` provider and forces the Android scheme to `https` to satisfy Firebase Auth origin restrictions.
+
 ---
 
-### 10. Guest Data Security (`src/App.tsx`)
+### 11. Guest Data Security (`src/App.tsx`)
 Guest mode stores chore data as plain text in `localStorage`, which cannot be encrypted securely in the browser. The following mitigations are in place:
 
 - **Prominent Disclaimer**: A highly visible amber warning block is displayed on the login page and informs the guest that their data is stored unencrypted in browser local storage.

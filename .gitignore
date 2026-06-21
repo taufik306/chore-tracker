@@ -30,3 +30,15 @@ coverage/
 
 # Firebase local configuration
 firebase-applet-config.json
+
+# Capacitor Android
+android/app/build/
+android/app/release/
+android/app/debug/
+android/app/google-services.json
+android/.gradle/
+android/.idea/
+android/build/
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties

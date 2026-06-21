@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   signInWithPopup,
+  signInWithCredential,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   User
 } from 'firebase/auth';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { Capacitor } from '@capacitor/core';
 import {
   collection,
   query,
@@ -338,7 +342,24 @@ export default function App() {
   // 9. Auth Actions
   const handleGoogleLogin = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (Capacitor.isNativePlatform()) {
+        // Use native Google Sign-In on Android via @capacitor-firebase/authentication.
+        // Set useCredentialManager to false. The new CredentialManager API frequently
+        // fails with "No credentials available" if it conflicts with 3rd-party password
+        // managers or if there are no passkeys. Setting this to false forces the
+        // reliable legacy Google Account Picker overlay.
+        const result = await FirebaseAuthentication.signInWithGoogle({
+          useCredentialManager: false
+        });
+        if (!result.credential?.idToken) {
+          // User dismissed the native account picker — treat as silent cancellation
+          return;
+        }
+        const credential = GoogleAuthProvider.credential(result.credential.idToken);
+        await signInWithCredential(auth, credential);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (error: any) {
       // Silently handle user-initiated cancellations (e.g., closing the popup)
       const code = error?.code;
@@ -349,13 +370,17 @@ export default function App() {
       ) {
         return;
       }
-      console.error("Sign-in failed:", error instanceof Error ? error.message : 'Unknown error');
-      alert("Sign in sequence failed. You can launch using Local Guest Mode instead!");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Sign-in failed:", errorMessage);
+      alert(`Sign in sequence failed: ${errorMessage}\n\nYou can launch using Local Guest Mode instead!`);
     }
   };
 
   const handleLogout = async () => {
     try {
+      if (Capacitor.isNativePlatform()) {
+        await FirebaseAuthentication.signOut();
+      }
       await signOut(auth);
       setChores([]);
       setIsGuestMode(false);
