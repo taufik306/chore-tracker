@@ -9,6 +9,11 @@ import './index.css';
 
 // Initialize Native App Check as early as possible before any Firebase SDKs connect
 const initAppCheck = async () => {
+  if (import.meta.env.VITE_ENABLE_APP_CHECK !== 'true') {
+    console.log('Firebase App Check is disabled via feature flag.');
+    return;
+  }
+
   if (Capacitor.isNativePlatform()) {
     try {
       // 1. Initialize the Native Capacitor Plugin (Play Integrity)
