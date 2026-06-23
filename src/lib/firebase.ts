@@ -1,8 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { 
-  initializeFirestore, 
-  persistentLocalCache, 
+import {
+  initializeFirestore,
+  persistentLocalCache,
   persistentMultipleTabManager,
   doc,
   getDocFromServer
@@ -17,7 +17,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 // Enable persistent local cache to implement robust offline-first functionality
 const databaseId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || '(default)';
