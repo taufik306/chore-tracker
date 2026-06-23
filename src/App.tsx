@@ -342,17 +342,17 @@ export default function App() {
   // 9. Auth Actions
   const handleGoogleLogin = async () => {
     try {
+      // Show the full-screen loading spinner so the app doesn't look frozen!
+      setAuthLoading(true);
+      
       if (Capacitor.isNativePlatform()) {
         // Use native Google Sign-In on Android via @capacitor-firebase/authentication.
-        // Set useCredentialManager to false. The new CredentialManager API frequently
-        // fails with "No credentials available" if it conflicts with 3rd-party password
-        // managers or if there are no passkeys. Setting this to false forces the
-        // reliable legacy Google Account Picker overlay.
         const result = await FirebaseAuthentication.signInWithGoogle({
           useCredentialManager: false
         });
         if (!result.credential?.idToken) {
           // User dismissed the native account picker — treat as silent cancellation
+          setAuthLoading(false);
           return;
         }
         const credential = GoogleAuthProvider.credential(result.credential.idToken);
@@ -361,6 +361,8 @@ export default function App() {
         await signInWithPopup(auth, googleProvider);
       }
     } catch (error: any) {
+      setAuthLoading(false); // Revert loading state on error
+      
       // Silently handle user-initiated cancellations (e.g., closing the popup)
       const code = error?.code;
       if (
