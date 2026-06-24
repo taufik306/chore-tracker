@@ -204,7 +204,12 @@ const q = query(
 This serves as a client-side safeguard against runaway read costs or denial-of-service scenarios. For applications that grow beyond this limit, cursor-based pagination with `startAfter()` should be implemented.
 
 ### 10. Android Native Deployment (Capacitor)
-The web application is packaged as a native Android APK using **Capacitor 6**. The web assets (`dist/`) are synchronized into a native Android WebView via `npx cap sync`. 
+The web application can be packaged as a native Android APK using **Capacitor 6** with the help of script: `npm run cap:build`. When running `npm run cap:build`, the following sequence occurs and produces specific artifacts:
+1. **Web Build (`vite build`)**: The React application is compiled and minified into static HTML, JavaScript, and CSS files, which are placed in the `dist/` directory at the project root.
+2. **Capacitor Sync (`npx cap sync android`)**: The Capacitor CLI copies these web assets from the `dist/` directory directly into the Android native project folder at `android/app/src/main/assets/public/`. It also updates and synchronizes native Capacitor plugins and configuration changes by modifying:
+   - `android/app/src/main/assets/capacitor.config.json`: The compiled version of the root `capacitor.config.ts` settings.
+   - `android/app/src/main/assets/capacitor.plugins.json`: A generated map of all installed Capacitor plugins.
+   - `android/capacitor.settings.gradle` and `android/app/capacitor.build.gradle`: Auto-generated Gradle instructions to link installed native plugin dependencies.
 
 #### Native Google Sign-In
 Standard Firebase web authentication (`signInWithPopup` or `signInWithRedirect`) is notoriously incompatible with mobile WebViews (due to restricted origins, popup blocking, and localhost redirect loops). To solve this, the application leverages the `@capacitor-firebase/authentication` plugin:
