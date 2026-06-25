@@ -47,7 +47,7 @@ Before running this project, ensure your environment meets the following minimum
 
 ```text
 ├── docs/                        # Deep-dive system technical documentation
-│   └── technical-architecture.md
+│   └── technical-documentation.md
 ├── android/                     # Capacitor Native Android Project (Built automatically via cap sync)
 ├── src/
 │   ├── components/              # Highly modular UI components
@@ -72,6 +72,18 @@ Before running this project, ensure your environment meets the following minimum
 ├── package.json                 # Dependency version specs & builds
 └── tsconfig.json                # Strict compiler parameters
 ```
+
+---
+
+## 📚 Documentation Map
+
+For deep dives into specific subsystems, please refer to the detailed documentation:
+- 📖 [Technical Index & Onboarding](docs/technical-documentation.md)
+- 💾 [Sync Engine & State Management](docs/state/sync-engine.md)
+- 🔒 [Security & Authorization Model](docs/auth/security-model.md)
+- 🧩 [UI Components (ChoreForm, Audio)](docs/components/chore-form.md)
+- ⚠️ [Error Handling & API](docs/api/error-handling.md)
+- 📱 [Android Native Deployment](docs/deployment/android-capacitor.md)
 
 ---
 
