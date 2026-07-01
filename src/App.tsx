@@ -59,7 +59,9 @@ import {
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(() => {
+    return localStorage.getItem('isGuestMode') === 'true';
+  });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   // App states
@@ -116,6 +118,11 @@ export default function App() {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Guest Mode Persistence
+  useEffect(() => {
+    localStorage.setItem('isGuestMode', isGuestMode.toString());
+  }, [isGuestMode]);
 
   // 3. Auth Listener
   useEffect(() => {
