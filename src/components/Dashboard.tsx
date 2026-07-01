@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
-  AreaChart, Area, CartesianGrid 
+  AreaChart, Area, CartesianGrid, PieChart, Pie, Cell, Legend 
 } from 'recharts';
 import { Chore, DailyTrendPoint, ActivityStats } from '../types';
 import { 
   CheckCircle, Activity, Award, Hourglass, 
-  TrendingUp, Calendar, AlertCircle 
+  TrendingUp, Calendar, AlertCircle, PieChart as PieChartIcon 
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -99,6 +99,36 @@ export default function Dashboard({ chores }: DashboardProps) {
       percent
     };
   }, [chores]);
+
+  // Total duration insights by chore title
+  const pieData = useMemo(() => {
+    const titleMap: { [title: string]: number } = {};
+    const completed = chores.filter(c => c.status === 'completed');
+
+    completed.forEach(chore => {
+      const finish = chore.completedAt || Date.now();
+      const durationMinutes = (finish - chore.startTime) / (1000 * 60);
+      const normalizedTitle = chore.title.trim().toLowerCase();
+      // Capitalize first letter for display
+      const displayTitle = normalizedTitle.charAt(0).toUpperCase() + normalizedTitle.slice(1);
+      
+      if (!titleMap[displayTitle]) {
+        titleMap[displayTitle] = 0;
+      }
+      titleMap[displayTitle] += durationMinutes;
+    });
+
+    return Object.keys(titleMap)
+      .map(title => ({
+        title,
+        duration: Math.round(titleMap[title])
+      }))
+      .filter(item => item.duration > 0) // only show if took >= 1 min
+      .sort((a, b) => b.duration - a.duration); // sort by largest slice
+  }, [chores]);
+
+  // Premium colors for the Pie slices
+  const COLORS = ['#6366f1', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#3b82f6', '#10b981', '#f43f5e'];
 
   return (
     <div id="dashboard-tab-content" className="space-y-6">
@@ -261,6 +291,68 @@ export default function Dashboard({ chores }: DashboardProps) {
                     fill="url(#completedGrad)" 
                   />
                 </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chore Duration Distribution Pie Chart */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <PieChartIcon className="w-4 h-4 text-pink-500" />
+              Total Time by Chore
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Distribution of total time spent on completed chores</p>
+          </div>
+        </div>
+
+        <div className="h-64 relative font-sans text-xs">
+          {pieData.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-1.5">
+              <AlertCircle className="w-7 h-7 text-slate-300" />
+              <p className="text-xs">Complete some chores to see time distribution.</p>
+            </div>
+          ) : (
+            <div className="w-full h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="duration"
+                    nameKey="title"
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [`${value} mins`, 'Total Time']}
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      background: '#0f172a', 
+                      border: 'none', 
+                      color: '#f8fafc',
+                      fontSize: '11px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                  <Legend 
+                    verticalAlign="middle" 
+                    align="right"
+                    layout="vertical"
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: '11px', color: '#64748b' }}
+                  />
+                </PieChart>
               </ResponsiveContainer>
             </div>
           )}
