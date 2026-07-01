@@ -42,3 +42,7 @@ android/build/
 android/app/src/main/assets/public/
 android/capacitor-cordova-android-plugins/build/
 android/local.properties
+
+# Agent Customizations
+.agent/skills/
+.agents/skills/
